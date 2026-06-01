@@ -1060,7 +1060,6 @@ function buildAllLists() {
 }
 
 function buildExItem(ex, treino) {
-  var st = load();
   var wrap = document.createElement('div');
   wrap.className = 'ex-item';
   wrap.id = 'exwrap-'+ex.id;
@@ -1070,18 +1069,34 @@ function buildExItem(ex, treino) {
     return '<span class="badge '+p[0]+'">'+p[1]+'</span>';
   }).join('');
 
-  var varBtn = VARIATIONS[ex.id] ? '<div class="ex-var-btn" onclick="event.stopPropagation();toggleVar(''+ex.id+'')" title="Ver variação">⇄</div>' : '';
+  var hasVar = !!VARIATIONS[ex.id];
 
   var hdr = document.createElement('div');
   hdr.className = 'ex-hdr';
-  hdr.onclick = function() { toggleDetail(ex.id); };
   hdr.innerHTML =
     '<div class="ex-num">'+ex.id.replace(treino,'')+'</div>'+
     '<div class="ex-info"><div class="ex-name">'+ex.name+'</div><div class="ex-badges">'+badges+'</div></div>'+
     '<div class="ex-right">'+
     '<div><div class="ex-sets">'+ex.sets_label+'</div><div class="ex-rest">'+(ex.rest>=120?Math.floor(ex.rest/60)+'min':ex.rest+'s')+' desc.</div></div>'+
-    varBtn+
-    '<div class="ex-vid" onclick="event.stopPropagation();openYT(''+ex.yt+'')" title="Ver vídeo">▶</div></div>';
+    (hasVar ? '<div class="ex-var-btn" id="varbtn-'+ex.id+'" title="Ver variação">⇄</div>' : '')+
+    '<div class="ex-vid" id="vidbtn-'+ex.id+'" title="Ver vídeo">▶</div>'+
+    '</div>';
+
+  // Eventos via addEventListener (sem problemas de aspas)
+  hdr.addEventListener('click', function() { toggleDetail(ex.id); });
+
+  var vidBtn = hdr.querySelector('#vidbtn-'+ex.id);
+  if (vidBtn) {
+    vidBtn.addEventListener('click', function(e) { e.stopPropagation(); openYT(ex.yt); });
+  }
+
+  if (hasVar) {
+    var varBtn = hdr.querySelector('#varbtn-'+ex.id);
+    if (varBtn) {
+      varBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleVar(ex.id); });
+    }
+  }
+
   wrap.appendChild(hdr);
 
   var det = document.createElement('div');
@@ -1090,8 +1105,7 @@ function buildExItem(ex, treino) {
   det.innerHTML = buildDetailHTML(ex);
   wrap.appendChild(det);
 
-  // Variação panel
-  if (VARIATIONS[ex.id]) {
+  if (hasVar) {
     var vp = document.createElement('div');
     vp.className = 'var-panel';
     vp.id = 'var-'+ex.id;
@@ -1101,8 +1115,13 @@ function buildExItem(ex, treino) {
       '<div class="var-title">'+typeLabel+'</div>'+
       '<div class="var-name">'+v.varName+'</div>'+
       '<div class="var-tip">'+v.varTip+'</div>'+
-      '<div class="var-vid-btn" onclick="openYT(''+v.varYt+'')">▶ Ver execução</div>';
+      '<div class="var-vid-btn" id="varvidbtn-'+ex.id+'">▶ Ver execução</div>';
+    // Evento no botão de vídeo da variação
     wrap.appendChild(vp);
+    setTimeout(function() {
+      var vvb = document.getElementById('varvidbtn-'+ex.id);
+      if (vvb) vvb.addEventListener('click', function() { openYT(v.varYt); });
+    }, 0);
   }
 
   return wrap;
@@ -1115,7 +1134,6 @@ function buildDetailHTML(ex) {
   });
   methodHTML += '</div>';
 
-  // Série logging
   var workSets = currentDeload ? 1 : 2;
   var serieHTML = '<div class="serie-log"><div class="serie-log-title">Registrar séries</div>';
   var st = load();
@@ -1127,17 +1145,15 @@ function buildDetailHTML(ex) {
     serieHTML +=
       '<div class="serie-row" id="sr-'+ex.id+'-'+i+'">'+
       '<div class="snum'+doneN+'" id="snum-'+ex.id+'-'+i+'">'+(sdata.done?'✓':i)+'</div>'+
-      '<input class="s-inp" id="kg-'+ex.id+'-'+i+'" type="number" step="0.5" placeholder="kg" value="'+(sdata.kg||'')+'" oninput="saveKg(''+ex.id+'','+i+',this.value)">'+
+      '<input class="s-inp" id="kg-'+ex.id+'-'+i+'" type="number" step="0.5" placeholder="kg" value="'+(sdata.kg||'')+'" data-exid="'+ex.id+'" data-serie="'+i+'" data-type="kg">'+
       '<div class="s-x">×</div>'+
-      '<input class="s-inp" id="rp-'+ex.id+'-'+i+'" type="number" placeholder="reps" value="'+(sdata.reps||'')+'" oninput="saveRp(''+ex.id+'','+i+',this.value)">'+
-      '<div class="s-chk'+done+'" id="sck-'+ex.id+'-'+i+'" onclick="checkS(''+ex.id+'','+i+')">'+(sdata.done?'✓':'○')+'</div>'+
+      '<input class="s-inp" id="rp-'+ex.id+'-'+i+'" type="number" placeholder="reps" value="'+(sdata.reps||'')+'" data-exid="'+ex.id+'" data-serie="'+i+'" data-type="rp">'+
+      '<div class="s-chk'+done+'" id="sck-'+ex.id+'-'+i+'" data-exid="'+ex.id+'" data-serie="'+i+'">'+(sdata.done?'✓':'○')+'</div>'+
       '</div>';
   }
   serieHTML += '</div>';
 
-  // Dica de progressão baseada em histórico
   var progHint = buildProgHint(ex.id);
-
   var obsHTML = ex.obs ? '<div class="ex-obs">'+ex.obs+'</div>' : '';
   return methodHTML + serieHTML + progHint + obsHTML;
 }
@@ -1504,6 +1520,19 @@ async function initApp() {
     }
   } catch(e) {}
   
+  // ── Delegação de eventos para inputs de série (data-attributes) ──
+  document.getElementById('main-content').addEventListener('input', function(e) {
+    var t = e.target;
+    if (t.dataset.type === 'kg') saveKg(t.dataset.exid, parseInt(t.dataset.serie), t.value);
+    if (t.dataset.type === 'rp') saveRp(t.dataset.exid, parseInt(t.dataset.serie), t.value);
+  });
+  document.getElementById('main-content').addEventListener('click', function(e) {
+    var t = e.target;
+    if (t.classList.contains('s-chk') && t.dataset.exid) {
+      checkS(t.dataset.exid, parseInt(t.dataset.serie));
+    }
+  });
+
   // Semana e fase automáticas
   renderHeaderWeek();
   autoSetPhase();

@@ -785,9 +785,22 @@ function applyPhase(i, manual) {
   currentDeload = pd.isDeload;
   document.getElementById('deload-banner').classList.toggle('show', pd.isDeload);
   currentPhase = i;
-  buildAllLists();
+  // Atualiza séries de deload sem reconstruir o DOM
+  updateDeloadSeries();
   // Dica de progressão de carga
   renderProgBanner(i);
+}
+
+function updateDeloadSeries() {
+  // No deload: esconde a série 2 de cada exercício sem reconstruir o DOM
+  ['a','b','c','d','e'].forEach(function(t) {
+    EXERCISES[t].forEach(function(ex) {
+      var s2 = document.getElementById('sr-'+ex.id+'-2');
+      var sck2 = document.getElementById('sck-'+ex.id+'-2');
+      if (s2) s2.style.display = currentDeload ? 'none' : '';
+      if (sck2) sck2.style.display = currentDeload ? 'none' : '';
+    });
+  });
 }
 
 function renderProgBanner(phaseIdx) {
@@ -1520,6 +1533,9 @@ async function initApp() {
     }
   } catch(e) {}
   
+  // Construir listas de exercícios UMA ÚNICA VEZ
+  buildAllLists();
+
   // ── Delegação de eventos para inputs de série (data-attributes) ──
   document.getElementById('main-content').addEventListener('input', function(e) {
     var t = e.target;

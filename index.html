@@ -1524,19 +1524,7 @@ function renderChart() {
 
 // ── INIT ──
 async function initApp() {
-  // Carrega do Supabase
-  try {
-    var remote = await supaLoad();
-    if (remote && Object.keys(remote).length > 0) {
-      _cache = remote;
-      localStorage.setItem(SK, JSON.stringify(remote));
-    }
-  } catch(e) {}
-  
-  // Construir listas de exercícios UMA ÚNICA VEZ
-  buildAllLists();
-
-  // ── Delegação de eventos para inputs de série (data-attributes) ──
+  // 1. Delegação de eventos (antes de tudo — funciona para elementos futuros)
   document.getElementById('main-content').addEventListener('input', function(e) {
     var t = e.target;
     if (t.dataset.type === 'kg') saveKg(t.dataset.exid, parseInt(t.dataset.serie), t.value);
@@ -1549,28 +1537,35 @@ async function initApp() {
     }
   });
 
-  // Semana e fase automáticas
+  // 2. Carregar dados do Supabase / localStorage
+  try {
+    var remote = await supaLoad();
+    if (remote && Object.keys(remote).length > 0) {
+      _cache = remote;
+      localStorage.setItem(SK, JSON.stringify(remote));
+    }
+  } catch(e) {}
+
+  // 3. Construir TODOS os exercícios no DOM (uma única vez)
+  buildAllLists();
+
+  // 4. Semana e fase (não reconstrói DOM — só atualiza badges/texto)
   renderHeaderWeek();
   autoSetPhase();
-  
-  // Lembrete de treino
+
+  // 5. Lembrete e estado visual
   renderHojeBanner();
-  
-  // Dots da semana
   updateWeekDots();
-  
-  // Semana atual no checkin
   document.getElementById('ci-semana').value = getWeekNumber();
-  
-  // Abrir treino do dia automaticamente
+
+  // 6. Abrir treino do dia (após tudo estar construído)
   var info = getTreinoHoje();
-  if (info.treino && info.type !== 'done') {
-    showTreino(info.treino);
-  } else {
-    showTreino('a');
-  }
-  toggleTC('tc'+currentTreino);
+  var treinoInicial = (info.treino && info.type !== 'done') ? info.treino : 'a';
+  showTreino(treinoInicial);
+  toggleTC('tc' + treinoInicial);
 }
+
+initApp();
 
 initApp();
 </script>

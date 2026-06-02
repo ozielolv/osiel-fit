@@ -531,7 +531,11 @@ body{font-family:'Outfit',sans-serif;color:var(--t1);overscroll-behavior:none;-w
 </div>
 
 
+
+
+
 <script>
+
 
 // \u2500\u2500 DEBUG (safe - nunca quebra) \u2500\u2500
 function dbg(msg, color) {
@@ -838,11 +842,13 @@ function renderProgBanner(phaseIdx) {
 }
 
 
+
 </script>
 <script>
-// \u2500\u2500 DADOS DE EXERC\u00cdCIOS \u2500\u2500
-var EXERCISES = {
-  a: [
+var EXERCISES = {};
+</script>
+<script>
+EXERCISES.a = [
     {id:'a1', name:'Supino inclinado com halteres', badges:['b-pf:Peito superior','b-ok:Ombro seguro'], sets_label:'2 \u00d7 6\u201310', rest:180, yt:'WP1VLAt8hbM',
      method:[
       {tag:'AQUEC',cls:'tag-warm', desc:'Use um peso que d\u00e1 para fazer 15 reps sem esfor\u00e7o. 1 s\u00e9rie \u00d7 12 reps. Objetivo: sentir o peito acordar.'},
@@ -881,8 +887,10 @@ var EXERCISES = {
       {tag:'TRABALHO',cls:'tag-work', desc:'<strong>2 s\u00e9ries \u00d7 15\u201320 reps.</strong> Polia alta, ajoelhado, corda na nuca. Flexiona o tronco com carga progressiva \u2014 n\u00e3o usa impulso. Descanso: 90s. Progride a carga toda semana.'}
      ],
      obs:'Abd\u00f4men com carga em todo treino. Polia alta com corda \u00e9 o exerc\u00edcio de maior ativa\u00e7\u00e3o do reto abdominal com resist\u00eancia real.'}
-  ],
-  b: [
+];
+</script>
+<script>
+EXERCISES.b = [
     {id:'b1', name:'Puxada frente \u2014 pegada fechada supinada', badges:['b-pf:Lat inferior','b-ok:Ombro neutro'], sets_label:'2 \u00d7 8\u201310', rest:150, yt:'pJM_rHhluK8',
      method:[
       {tag:'AQUEC',cls:'tag-warm', desc:'1 s\u00e9rie leve \u00d7 12 reps. Deixa o peso esticar o lat no topo antes de puxar.'},
@@ -922,8 +930,10 @@ var EXERCISES = {
       {tag:'TRABALHO',cls:'tag-work', desc:'<strong>2 s\u00e9ries \u00d7 15 reps.</strong> Deitado no banco ou suspenso nas barras. Caneleira come\u00e7a leve (1\u20132 kg) e progride. Movimento controlado \u2014 n\u00e3o usa impulso. Descanso: 90s.'}
      ],
      obs:'Foco em abd\u00f4men infra \u2014 regi\u00e3o periumbilical e abaixo, ponto fraco confirmado pelas fotos.'}
-  ],
-  c: [
+];
+</script>
+<script>
+EXERCISES.c = [
     {id:'c1', name:'Terra sum\u00f4 com halteres', badges:['b-warn:Aquec. obrigat\u00f3rio','b-ok:Lombar ok'], sets_label:'2 \u00d7 8\u201310', rest:180, yt:'50AkPBZwACQ',
      method:[
       {tag:'AQUEC',cls:'tag-warm', desc:'1 s\u00e9rie bem leve \u00d7 10 reps. Ativa cadeia posterior sem for\u00e7ar a lombar.'},
@@ -963,8 +973,10 @@ var EXERCISES = {
       {tag:'TRABALHO',cls:'tag-work', desc:'<strong>2 s\u00e9ries \u00d7 12\u201315 reps.</strong> Banco declinado. Anilha come\u00e7a leve (5 kg) e progride. Descida 2\u20133s controlada. Descanso: 90s.'}
      ],
      obs:'Reto abdominal com carga real. Progride 5 kg \u2192 20 kg ao longo das fases.'}
-  ],
-  d: [
+];
+</script>
+<script>
+EXERCISES.d = [
     {id:'d1', name:'Supino declinado com halteres', badges:['b-pf:Peito inferior','b-ok:Ombro seguro'], sets_label:'2 \u00d7 8\u201310', rest:180, yt:'J2g6qPBJfqo',
      method:[
       {tag:'AQUEC',cls:'tag-warm', desc:'1 s\u00e9rie leve \u00d7 15 reps \u2014 sente o alongamento na parte de baixo do peitoral.'},
@@ -1003,8 +1015,10 @@ var EXERCISES = {
       {tag:'TRABALHO',cls:'tag-work', desc:'<strong>2 s\u00e9ries \u00d7 8\u201312 reps.</strong> Fase 1: de joelhos. Fase 3: em p\u00e9. Core completo em cadeia fechada. Descanso: 90s.'}
      ],
      obs:'Exerc\u00edcio de alta intensidade para core \u2014 reto, obl\u00edquos e estabilizadores todos em cadeia fechada. N\u00e3o substitua por crunches.'}
-  ],
-  e: [
+];
+</script>
+<script>
+EXERCISES.e = [
     {id:'e1', name:'Remada cavalinho na m\u00e1quina', badges:['b-ok:Lombar protegida','b-pf:Espessura'], sets_label:'2 \u00d7 8\u201310', rest:150, yt:'Bgg6bRSTM_4',
      method:[
       {tag:'AQUEC',cls:'tag-warm', desc:'1 s\u00e9rie leve \u00d7 12 reps \u2014 aquece lombar e costas superiores.'},
@@ -1048,10 +1062,9 @@ var EXERCISES = {
       {tag:'TRABALHO',cls:'tag-work', desc:'<strong>2 s\u00e9ries \u00d7 15\u201320 reps.</strong> Carga progressiva \u2014 n\u00e3o decorativa. Flex\u00e3o controlada do tronco, sem usar impulso. Descanso: 90s.'}
      ],
      obs:'Abd\u00f4men com carga em todo treino. Na semana de deload: 1 s\u00e9rie apenas.'}
-  ]
-}
-
-// \u2500\u2500 VARIA\u00c7\u00d5ES \u2500\u2500
+];
+</script>
+<script>
 var VARIATIONS = {
   'a1': {type:'livre', varName:'Smith Inclinado', varYt:'WP1VLAt8hbM', varTip:'No Smith: p\u00e9s levemente \u00e0 frente, mesma amplitude. Use quando o ombro estiver sens\u00edvel ou os halteres pesados demais.'},
   'a2': {type:'maquina', varName:'Crucifixo com halteres', varYt:'uDMmccuPVPQ', varTip:'Halteres: amplitude total, cotovelos levemente flexionados. Mais estabiliza\u00e7\u00e3o. Banco reto ou inclinado.'},
@@ -1082,9 +1095,9 @@ var VARIATIONS = {
 };
 
 // \u2500\u2500 BUILD EXERCISE LISTS \u2500\u2500
-
 </script>
 <script>
+
 function buildAllLists() {
   ['a','b','c','d','e'].forEach(function(t) {
     var c = document.getElementById('exlist-'+t);
@@ -1615,6 +1628,7 @@ if (document.readyState === 'loading') {
 } else {
   initApp();
 }
+
 </script>
 </body>
 </html>

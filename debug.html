@@ -267,12 +267,6 @@ body{font-family:'Outfit',sans-serif;color:var(--t1);overscroll-behavior:none;-w
 .empty-state{text-align:center;padding:32px 20px;color:var(--t3);font-size:13px;line-height:1.6}
 .empty-icon{font-size:32px;margin-bottom:10px}
 </style>
-
-<style>
-#debug-panel{position:fixed;bottom:80px;left:10px;right:10px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,.92);border:2px solid #f87171;border-radius:10px;padding:10px;z-index:9999;font-size:11px;font-family:monospace;color:#f87171;display:none}
-#debug-panel.show{display:block}
-#debug-toggle{position:fixed;bottom:140px;right:10px;background:#f87171;color:#000;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;z-index:10000;cursor:pointer;display:flex;align-items:center;justify-content:center}
-</style>
 </head>
 <body>
 <div class="app">
@@ -536,6 +530,19 @@ body{font-family:'Outfit',sans-serif;color:var(--t1);overscroll-behavior:none;-w
   </div>
 </div>
 <script>
+// ── DEBUG (safe - nunca quebra) ──
+function dbg(msg, color) {
+  try {
+    var el = document.getElementById('debug-log');
+    if (!el) return;
+    var d = document.createElement('div');
+    d.style.color = color||'#f87171';
+    d.style.marginBottom='2px';
+    d.textContent = new Date().toISOString().slice(11,19)+' '+msg;
+    el.insertBefore(d, el.firstChild);
+  } catch(e) {}
+}
+
 /*
 ══ SUPABASE TABLE SQL ══
 Execute no SQL Editor do Supabase (pkzjxvrmyilgsqpjpdlr):
@@ -1529,8 +1536,8 @@ function renderChart() {
 }
 
 // ── INIT ──
-async function initApp() {
-  // 1. Delegação de eventos (antes de tudo — funciona para elementos futuros)
+function initApp() {
+  // 1. Delegação de eventos
   document.getElementById('main-content').addEventListener('input', function(e) {
     var t = e.target;
     if (t.dataset.type === 'kg') saveKg(t.dataset.exid, parseInt(t.dataset.serie), t.value);
@@ -1543,85 +1550,74 @@ async function initApp() {
     }
   });
 
-  // 2. Carregar dados do Supabase / localStorage
+  // 2. Carregar localStorage IMEDIATAMENTE (síncrono)
+  // Supabase sincroniza em background depois
+  _cache = null;
   try {
-    var remote = await supaLoad();
-    if (remote && Object.keys(remote).length > 0) {
-      _cache = remote;
-      localStorage.setItem(SK, JSON.stringify(remote));
-    }
+    var local = localStorage.getItem(SK);
+    if (local) _cache = JSON.parse(local);
   } catch(e) {}
 
-  // 3. Construir TODOS os exercícios no DOM (uma única vez)
-  dbg("buildAllLists iniciando...", "#2dd4bf");
+  // 3. Construir exercícios no DOM
+  dbg('buildAllLists...', '#2dd4bf');
   buildAllLists();
-  dbg("buildAllLists OK", "#c6f135");
+  dbg('buildAllLists OK - ' + document.querySelectorAll('.ex-item').length + ' itens', '#c6f135');
 
-  // 4. Semana e fase
-  dbg("renderHeaderWeek...", "#2dd4bf");
+  // 4. Semana e fase automáticas
+  dbg('renderHeaderWeek...', '#2dd4bf');
   renderHeaderWeek();
-  dbg("autoSetPhase...", "#2dd4bf");
+  dbg('autoSetPhase...', '#2dd4bf');
   autoSetPhase();
-  dbg("fase OK", "#c6f135");
+  dbg('fase OK', '#c6f135');
 
-  // 5. Lembrete e estado visual
+  // 5. Estado visual
   renderHojeBanner();
   updateWeekDots();
   document.getElementById('ci-semana').value = getWeekNumber();
 
-  dbg("abrindo treino inicial...", "#2dd4bf");
   // 6. Abrir treino do dia
+  dbg('abrindo treino...', '#2dd4bf');
   var info = getTreinoHoje();
   var treinoInicial = (info.treino && info.type !== 'done') ? info.treino : 'a';
   showTreino(treinoInicial);
   toggleTC('tc' + treinoInicial);
+  dbg('app pronto!', '#c6f135');
+
+  // 7. Sincronizar Supabase em background (não bloqueia)
+  setTimeout(function() {
+    supaLoad().then(function(remote) {
+      if (remote && Object.keys(remote).length > 0) {
+        _cache = remote;
+        try { localStorage.setItem(SK, JSON.stringify(remote)); } catch(e) {}
+        dbg('Supabase sync OK', '#c6f135');
+        // Re-renderizar apenas o que precisa (dots e checkin)
+        updateWeekDots();
+        renderHojeBanner();
+      }
+    }).catch(function(e) {
+      dbg('Supabase offline (usando local)', '#a78bfa');
+    });
+  }, 100);
 }
 
-dbg("initApp() chamado", "#a78bfa");
-initApp().then(function(){ dbg("initApp() concluído", "#c6f135"); }).catch(function(e){ dbg("initApp ERRO: "+e.message, "#f87171"); });
+initApp();
 
-dbg("initApp() chamado", "#a78bfa");
-initApp().then(function(){ dbg("initApp() concluído", "#c6f135"); }).catch(function(e){ dbg("initApp ERRO: "+e.message, "#f87171"); });
+initApp();
+
+initApp();
 </script>
-
-<button id="debug-toggle" onclick="document.getElementById('debug-panel').classList.toggle('show')">🐛</button>
-<div id="debug-panel" id="debug-panel">
-  <div style="color:#fff;font-weight:bold;margin-bottom:6px">DEBUG LOG</div>
-  <div id="debug-log"></div>
-</div>
-
 <script>
-// ── DEBUG INTERCEPTOR ──
-var _debugEl = null;
-function dbg(msg, color) {
-  if (!_debugEl) _debugEl = document.getElementById('debug-log');
-  if (!_debugEl) return;
-  var line = document.createElement('div');
-  line.style.color = color || '#f87171';
-  line.style.marginBottom = '3px';
-  line.textContent = new Date().toISOString().slice(11,19) + ' ' + msg;
-  _debugEl.insertBefore(line, _debugEl.firstChild);
-}
-
-// Interceptar erros globais
 window.onerror = function(msg, src, line, col, err) {
-  document.getElementById('debug-panel').classList.add('show');
-  dbg('ERROR: ' + msg + ' (L'+line+')', '#f87171');
+  var p = document.getElementById('debug-panel');
+  if (p) p.classList.add('show');
+  dbg('ERROR L'+line+': '+msg, '#f87171');
   return false;
 };
 window.addEventListener('unhandledrejection', function(e) {
-  document.getElementById('debug-panel').classList.add('show');
-  dbg('PROMISE: ' + (e.reason ? e.reason.message || e.reason : 'unknown'), '#fb923c');
+  var p = document.getElementById('debug-panel');
+  if (p) p.classList.add('show');
+  dbg('PROMISE ERR: '+(e.reason?e.reason.message||String(e.reason):'?'), '#fb923c');
 });
-
-// Interceptar console.error
-var _origErr = console.error;
-console.error = function() {
-  _origErr.apply(console, arguments);
-  dbg('console.error: ' + Array.prototype.join.call(arguments, ' '), '#fb923c');
-};
-
-// Log de marcos de inicialização
 document.addEventListener('DOMContentLoaded', function() {
   dbg('DOMContentLoaded OK', '#c6f135');
 });

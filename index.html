@@ -530,6 +530,19 @@ body{font-family:'Outfit',sans-serif;color:var(--t1);overscroll-behavior:none;-w
   </div>
 </div>
 <script>
+// ── DEBUG (safe - nunca quebra) ──
+function dbg(msg, color) {
+  try {
+    var el = document.getElementById('debug-log');
+    if (!el) return;
+    var d = document.createElement('div');
+    d.style.color = color||'#f87171';
+    d.style.marginBottom='2px';
+    d.textContent = new Date().toISOString().slice(11,19)+' '+msg;
+    el.insertBefore(d, el.firstChild);
+  } catch(e) {}
+}
+
 /*
 ══ SUPABASE TABLE SQL ══
 Execute no SQL Editor do Supabase (pkzjxvrmyilgsqpjpdlr):
@@ -1523,8 +1536,8 @@ function renderChart() {
 }
 
 // ── INIT ──
-async function initApp() {
-  // 1. Delegação de eventos (antes de tudo — funciona para elementos futuros)
+function initApp() {
+  // 1. Delegação de eventos
   document.getElementById('main-content').addEventListener('input', function(e) {
     var t = e.target;
     if (t.dataset.type === 'kg') saveKg(t.dataset.exid, parseInt(t.dataset.serie), t.value);
@@ -1537,37 +1550,77 @@ async function initApp() {
     }
   });
 
-  // 2. Carregar dados do Supabase / localStorage
+  // 2. Carregar localStorage IMEDIATAMENTE (síncrono)
+  // Supabase sincroniza em background depois
+  _cache = null;
   try {
-    var remote = await supaLoad();
-    if (remote && Object.keys(remote).length > 0) {
-      _cache = remote;
-      localStorage.setItem(SK, JSON.stringify(remote));
-    }
+    var local = localStorage.getItem(SK);
+    if (local) _cache = JSON.parse(local);
   } catch(e) {}
 
-  // 3. Construir TODOS os exercícios no DOM (uma única vez)
+  // 3. Construir exercícios no DOM
+  dbg('buildAllLists...', '#2dd4bf');
   buildAllLists();
+  dbg('buildAllLists OK - ' + document.querySelectorAll('.ex-item').length + ' itens', '#c6f135');
 
-  // 4. Semana e fase (não reconstrói DOM — só atualiza badges/texto)
+  // 4. Semana e fase automáticas
+  dbg('renderHeaderWeek...', '#2dd4bf');
   renderHeaderWeek();
+  dbg('autoSetPhase...', '#2dd4bf');
   autoSetPhase();
+  dbg('fase OK', '#c6f135');
 
-  // 5. Lembrete e estado visual
+  // 5. Estado visual
   renderHojeBanner();
   updateWeekDots();
   document.getElementById('ci-semana').value = getWeekNumber();
 
-  // 6. Abrir treino do dia (após tudo estar construído)
+  // 6. Abrir treino do dia
+  dbg('abrindo treino...', '#2dd4bf');
   var info = getTreinoHoje();
   var treinoInicial = (info.treino && info.type !== 'done') ? info.treino : 'a';
   showTreino(treinoInicial);
   toggleTC('tc' + treinoInicial);
+  dbg('app pronto!', '#c6f135');
+
+  // 7. Sincronizar Supabase em background (não bloqueia)
+  setTimeout(function() {
+    supaLoad().then(function(remote) {
+      if (remote && Object.keys(remote).length > 0) {
+        _cache = remote;
+        try { localStorage.setItem(SK, JSON.stringify(remote)); } catch(e) {}
+        dbg('Supabase sync OK', '#c6f135');
+        // Re-renderizar apenas o que precisa (dots e checkin)
+        updateWeekDots();
+        renderHojeBanner();
+      }
+    }).catch(function(e) {
+      dbg('Supabase offline (usando local)', '#a78bfa');
+    });
+  }, 100);
 }
 
 initApp();
 
 initApp();
+
+initApp();
+</script>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  var p = document.getElementById('debug-panel');
+  if (p) p.classList.add('show');
+  dbg('ERROR L'+line+': '+msg, '#f87171');
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var p = document.getElementById('debug-panel');
+  if (p) p.classList.add('show');
+  dbg('PROMISE ERR: '+(e.reason?e.reason.message||String(e.reason):'?'), '#fb923c');
+});
+document.addEventListener('DOMContentLoaded', function() {
+  dbg('DOMContentLoaded OK', '#c6f135');
+});
 </script>
 </body>
 </html>

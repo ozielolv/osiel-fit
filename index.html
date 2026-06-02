@@ -545,18 +545,18 @@ CREATE POLICY "public_access" ON fitness_state
 */
 
 // ── SUPABASE ──
-const SUPA_URL   = 'https://pkzjxvrmyilgsqpjpdlr.supabase.co';
-const SUPA_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBremp4dnJteWlsZ3NxcGpwZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjYzNjEsImV4cCI6MjA5NTg0MjM2MX0.rg9Pm2f8P2FhTQeUTygbnWUY3Uujkj2LX7IwtdQQDbw'; // Cole sua anon key aqui
-const USER_ID    = 'osiel';
-const TABLE      = 'fitness_state';
+var SUPA_URL   = 'https://pkzjxvrmyilgsqpjpdlr.supabase.co';
+var SUPA_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBremp4dnJteWlsZ3NxcGpwZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjYzNjEsImV4cCI6MjA5NTg0MjM2MX0.rg9Pm2f8P2FhTQeUTygbnWUY3Uujkj2LX7IwtdQQDbw'; // Cole sua anon key aqui
+var USER_ID    = 'osiel';
+var TABLE      = 'fitness_state';
 
 async function supaLoad() {
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/${TABLE}?user_id=eq.${USER_ID}&select=state`, {
+    var r = await fetch(SUPA_URL+'/rest/v1/'+TABLE+'?user_id=eq.'+USER_ID+'&select=state', {
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
     });
     if (!r.ok) throw new Error('offline');
-    const rows = await r.json();
+    var rows = await r.json();
     return (rows && rows.length > 0) ? (rows[0].state || {}) : {};
   } catch(e) {
     try { return JSON.parse(localStorage.getItem('osielfitv7') || '{}'); } catch(e2) { return {}; }
@@ -565,7 +565,7 @@ async function supaLoad() {
 async function supaSave(data) {
   try { localStorage.setItem('osielfitv7', JSON.stringify(data)); } catch(e) {}
   try {
-    await fetch(`${SUPA_URL}/rest/v1/${TABLE}`, {
+    await fetch(SUPA_URL+'/rest/v1/'+TABLE, {
       method: 'POST',
       headers: {
         'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
@@ -591,12 +591,12 @@ function save(d) {
 }
 
 // ── DATA DE INÍCIO DO PROTOCOLO ──
-const START_DATE = new Date('2026-05-13T00:00:00'); // 13 de maio de 2026
+var START_DATE = new Date('2026-05-13T00:00:00'); // 13 de maio de 2026
 
 function getWeekNumber() {
-  const now = new Date();
-  const diff = now - START_DATE;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  var now = new Date();
+  var diff = now - START_DATE;
+  var days = Math.floor(diff / (1000 * 60 * 60 * 24));
   return Math.max(1, Math.ceil((days + 1) / 7));
 }
 
@@ -611,7 +611,7 @@ function getPhaseFromWeek(w) {
 
 // ── SCHEDULE: dia da semana → treino ──
 // 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb
-const DAY_SCHEDULE = {
+var DAY_SCHEDULE = {
   1: 'a',  // Segunda → Push I
   2: 'b',  // Terça   → Pull I
   3: 'c',  // Quarta  → Legs
@@ -621,7 +621,7 @@ const DAY_SCHEDULE = {
   0: null  // Domingo → Descanso
 };
 
-const TREINO_NAMES = {
+var TREINO_NAMES = {
   a: 'Push I — Peito Superior + Ombro',
   b: 'Pull I — Costas Largura + Bíceps',
   c: 'Legs — Quad + Posterior + Glúteo',
@@ -631,21 +631,21 @@ const TREINO_NAMES = {
 
 // ── LÓGICA DO LEMBRETE ──
 function getTreinoHoje() {
-  const st = load();
-  const today = new Date();
-  const dow = today.getDay(); // 0–6
-  const scheduled = DAY_SCHEDULE[dow];
-  const todayKey = today.toISOString().slice(0,10); // 'YYYY-MM-DD'
+  var st = load();
+  var today = new Date();
+  var dow = today.getDay(); // 0–6
+  var scheduled = DAY_SCHEDULE[dow];
+  var todayKey = today.toISOString().slice(0,10); // 'YYYY-MM-DD'
   
   // Verificar se o treino de hoje já foi feito
-  const doneToday = st['done_' + todayKey];
+  var doneToday = st['done_' + todayKey];
   if (doneToday) {
     return { type: 'done', treino: doneToday, date: todayKey };
   }
   
   if (scheduled === null) {
     // Dia de descanso — verificar se há treino atrasado
-    const missed = getMissedTreino();
+    var missed = getMissedTreino();
     if (missed) return { type: 'atrasado', treino: missed, date: todayKey };
     return { type: 'descanso', treino: null, date: todayKey };
   }
@@ -655,16 +655,16 @@ function getTreinoHoje() {
 }
 
 function getMissedTreino() {
-  const st = load();
-  const today = new Date();
+  var st = load();
+  var today = new Date();
   // Verificar os últimos 3 dias para treino não feito
-  for (let i = 1; i <= 3; i++) {
-    const d = new Date(today);
+  for (var i = 1; i <= 3; i++) {
+    var d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dow = d.getDay();
-    const scheduled = DAY_SCHEDULE[dow];
+    var dow = d.getDay();
+    var scheduled = DAY_SCHEDULE[dow];
     if (scheduled) {
-      const key = d.toISOString().slice(0,10);
+      var key = d.toISOString().slice(0,10);
       if (!st['done_' + key]) return scheduled;
     }
   }
@@ -672,8 +672,8 @@ function getMissedTreino() {
 }
 
 function markTreinoDone(treino) {
-  const st = load();
-  const today = new Date().toISOString().slice(0,10);
+  var st = load();
+  var today = new Date().toISOString().slice(0,10);
   st['done_' + today] = treino;
   save(st);
   renderHojeBanner();
@@ -681,12 +681,12 @@ function markTreinoDone(treino) {
 }
 
 function renderHojeBanner() {
-  const info = getTreinoHoje();
-  const banner = document.getElementById('hoje-banner');
-  const tag    = document.getElementById('hb-tag');
-  const title  = document.getElementById('hb-title');
-  const sub    = document.getElementById('hb-sub');
-  const btn    = document.getElementById('hb-goto-btn');
+  var info = getTreinoHoje();
+  var banner = document.getElementById('hoje-banner');
+  var tag    = document.getElementById('hb-tag');
+  var title  = document.getElementById('hb-title');
+  var sub    = document.getElementById('hb-sub');
+  var btn    = document.getElementById('hb-goto-btn');
   
   banner.className = 'hoje-banner show';
   
@@ -721,25 +721,25 @@ function renderHojeBanner() {
   
   // normal
   banner.classList.add('normal');
-  const dow = new Date().getDay();
-  const dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  tag.textContent   = `HOJE — ${dayNames[dow]}`;
+  var dow = new Date().getDay();
+  var dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  tag.textContent   = 'HOJE — ' + dayNames[dow];
   title.textContent = TREINO_NAMES[info.treino];
   sub.textContent   = 'Seu treino programado para hoje.';
   btn.setAttribute('data-treino', info.treino);
 }
 
 function irParaTreinoHoje() {
-  const btn = document.getElementById('hb-goto-btn');
-  const t = btn.getAttribute('data-treino');
+  var btn = document.getElementById('hb-goto-btn');
+  var t = btn.getAttribute('data-treino');
   if (t) showTreino(t);
 }
 
 // ── SEMANA ATUAL ──
 function renderHeaderWeek() {
-  const w = getWeekNumber();
-  const el = document.getElementById('header-week-sub');
-  el.textContent = `Semana ${w} de 12 · Iniciado 13/mai`;
+  var w = getWeekNumber();
+  var el = document.getElementById('header-week-sub');
+  el.textContent = 'Semana ' + w + ' de 12 · Iniciado 13/mai';
 }
 
 // ── PROGRESSÃO DE FASE AUTOMÁTICA ──
@@ -762,9 +762,9 @@ var PHASE_DATA = [
 ]
 
 function autoSetPhase() {
-  const w = getWeekNumber();
-  const phaseIdx = getPhaseFromWeek(w);
-  const tabs = document.querySelectorAll('.phase-tab');
+  var w = getWeekNumber();
+  var phaseIdx = getPhaseFromWeek(w);
+  var tabs = document.querySelectorAll('.phase-tab');
   tabs.forEach(function(t,i) { t.classList.toggle('active', i === phaseIdx); });
   applyPhase(phaseIdx, false);
 }
@@ -777,9 +777,9 @@ function setPhase(i, el) {
 }
 
 function applyPhase(i, manual) {
-  const pd = PHASE_DATA[i];
+  var pd = PHASE_DATA[i];
   document.getElementById('phase-info').innerHTML = pd.info;
-  const badge = document.getElementById('phase-badge');
+  var badge = document.getElementById('phase-badge');
   badge.textContent = pd.label;
   badge.className = 'phase-badge' + (pd.isDeload ? ' deload' : '');
   currentDeload = pd.isDeload;
@@ -804,17 +804,17 @@ function updateDeloadSeries() {
 }
 
 function renderProgBanner(phaseIdx) {
-  const w = getWeekNumber();
-  const pd = PHASE_DATA[phaseIdx];
-  const banner = document.getElementById('prog-banner');
-  const body = document.getElementById('prog-banner-body');
+  var w = getWeekNumber();
+  var pd = PHASE_DATA[phaseIdx];
+  var banner = document.getElementById('prog-banner');
+  var body = document.getElementById('prog-banner-body');
   
   if (pd.isDeload) { banner.classList.remove('show'); return; }
   
   // A cada 3 semanas dentro de uma fase, sugerir progressão
-  const weekInPhase = w - pd.startWeek + 1;
+  var weekInPhase = w - pd.startWeek + 1;
   if (weekInPhase >= 2) {
-    body.textContent = `Semana ${weekInPhase} da ${pd.label.split('·')[0].trim()} — se você fechou as séries com boa forma nas últimas 2 semanas, suba 2–3 kg nos compostos e 1–2 kg nos isoladores.`;
+    body.textContent = 'Semana ' + weekInPhase + ' da ' + pd.label.split('·')[0].trim() + ' — se você fechou as séries com boa forma nas últimas 2 semanas, suba 2–3 kg nos compostos e 1–2 kg nos isoladores.';
     banner.classList.add('show');
   } else {
     banner.classList.remove('show');
